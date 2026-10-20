@@ -5,7 +5,7 @@ import (
 )
 
 // Name is the name of this host module.
-const Name = "pantopic/wazero-cluster"
+const Name = "pantopic/ext-cluster"
 
 var (
 	ctxKeyNamespace = Name + `/namespace`
