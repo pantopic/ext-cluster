@@ -2,14 +2,15 @@ package wazero_cluster
 
 import (
 	"context"
+	"log"
 )
 
-// Name is the name of this host module.
 const Name = "pantopic/ext-cluster"
 
 var (
 	ctxKeyNamespace = Name + `/namespace`
 	ctxKeyResource  = Name + `/resource`
+	ctxKeyComponent = Name + "/component"
 )
 
 type ContextCopy = func(dst, src context.Context) context.Context
@@ -26,14 +27,16 @@ func NamespaceFrom(ctx context.Context) string {
 	if v, ok := ctx.Value(ctxKeyNamespace).(string); ok {
 		return v
 	}
-	panic("Namespace missing from context")
+	log.Fatal("Namespace missing from context")
+	return ""
 }
 
 func ResourceFrom(ctx context.Context) string {
 	if v, ok := ctx.Value(ctxKeyResource).(string); ok {
 		return v
 	}
-	panic("Resource missing from context")
+	log.Fatal("Resource missing from context")
+	return ""
 }
 
 func ResolveFrom(ctx context.Context) (string, string) {
