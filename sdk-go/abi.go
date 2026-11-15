@@ -46,6 +46,11 @@ func getErr() (e error) {
 	return
 }
 
+func setBufStr(data string) {
+	copy(buf[:0], data)
+	bufLen = uint32(len(data))
+}
+
 //go:wasm-module pantopic/ext-cluster
 //export __cluster_shard_next
 func _shard_next()
@@ -62,6 +67,10 @@ func _shard_create()
 //export __cluster_shard_update
 func _shard_update()
 
+//go:wasm-module pantopic/ext-cluster
+//export __cluster_resource_tagged
+func _resource_tagged()
+
 // Fix for lint rule `unusedfunc`
 var _ = __cluster
 var _ = _reconcile
@@ -69,3 +78,4 @@ var _ = _shard_next
 var _ = _shard_iter
 var _ = _shard_create
 var _ = _shard_update
+var _ = _resource_tagged

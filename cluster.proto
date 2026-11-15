@@ -89,10 +89,10 @@ message Replica {
   uint64 id = 1;
   uint64 created = 2;
   uint64 updated = 3;
-  string host_id = 4;
-  bool is_non_voting = 5;
-  bool is_witness = 6;
-  uint64 shard_id = 7;
+  uint64 shard_id = 4;
+  string host_id = 5;
+  bool is_non_voting = 6;
+  bool is_witness = 7;
   map<string, string> tags = 8;
   string status = 9;
 }

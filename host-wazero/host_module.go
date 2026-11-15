@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 	"sync"
 	"time"
 
@@ -56,6 +57,40 @@ func (h *hostModule) Name() string {
 	return Name
 }
 
+// InitContext retrieves the meta page from the wasm module
+func (h *hostModule) InitContext(ctx context.Context, m api.Module) (context.Context, error) {
+	fn := m.ExportedFunction(`__cluster`)
+	if fn == nil {
+		return ctx, nil
+	}
+	stack, err := fn.Call(ctx)
+	if err != nil {
+		return ctx, err
+	}
+	meta := &meta{}
+	ptr := uint32(stack[0])
+	for i, v := range []*uint32{
+		&meta.ptrBufCap,
+		&meta.ptrBufLen,
+		&meta.ptrBuf,
+		&meta.ptrErrCap,
+		&meta.ptrErrLen,
+		&meta.ptrErr,
+	} {
+		*v = readUint32(m, ptr+uint32(4*i))
+	}
+	return context.WithValue(ctx, ctxKeyMeta, meta), nil
+}
+
+// ContextCopier populates dst context with the meta page from src context.
+func (h *hostModule) ContextCopy(dst, src context.Context) context.Context {
+	if v := src.Value(ctxKeyMeta); v != nil {
+		dst = context.WithValue(dst, ctxKeyMeta, v.(*meta))
+		dst = context.WithValue(dst, ctxKeyLocal, &ctxLocal{})
+	}
+	return dst
+}
+
 // Register instantiates the host module, making it available to all module instances in this runtime
 func (h *hostModule) Register(ctx context.Context, r wazero.Runtime) (err error) {
 	builder := r.NewHostModuleBuilder(Name)
@@ -75,6 +110,7 @@ func (h *hostModule) Register(ctx context.Context, r wazero.Runtime) (err error)
 				err = h.agent.State(ctx, func(state *zongzi.State) {
 					state.ShardIterateByTag(`pantopic:component`, name, func(s zongzi.Shard) bool {
 						t.Reset(5 * time.Second)
+						s.Name = s.Name[strings.LastIndex(s.Name, ".")+1:]
 						select {
 						case <-t.C:
 							return false
@@ -96,11 +132,15 @@ func (h *hostModule) Register(ctx context.Context, r wazero.Runtime) (err error)
 			return
 		},
 		"__cluster_shard_create": func(ctx context.Context, shard *pb.Shard) (res *pb.Shard, err error) {
-			c := get[*pb.Component](ctx, ctxKeyComponent)
-			name := fmt.Sprintf(`%s.%s.%s`, c.GetNamespace(), c.GetResource(), c.GetName())
-			shard.Tags[`pantopic:component`] = name
-			s, _, err := h.agent.ShardCreate(ctx, shard.Type,
-				zongzi.WithName(name+"."+shard.Name),
+			component := get[*pb.Component](ctx, ctxKeyComponent)
+			componentName := fmt.Sprintf(`%s.%s.%s`, component.GetNamespace(), component.GetResource(), component.GetName())
+			shard.Tags[`pantopic:component`] = componentName
+			if bind := shard.Tags[`placement:bind`]; bind != "" {
+				shard.Tags[`placement:bind`] = componentName + "." + bind[strings.LastIndexByte(bind, '.')+1:]
+			}
+			s, _, err := h.agent.ShardCreate(ctx, "pantopic/ext-raft",
+				zongzi.WithName(componentName+"."+shard.Name),
+				zongzi.WithTags(component.Tags),
 				zongzi.WithTags(shard.Tags))
 			if err == nil {
 				res = shardToPb(s)
@@ -109,14 +149,23 @@ func (h *hostModule) Register(ctx context.Context, r wazero.Runtime) (err error)
 			return
 		},
 		"__cluster_shard_update": func(ctx context.Context, shard *pb.Shard) (res *pb.Shard, err error) {
-			c := get[*pb.Component](ctx, ctxKeyComponent)
-			name := fmt.Sprintf(`%s.%s.%s`, c.GetNamespace(), c.GetResource(), c.GetName())
-			shard.Tags[`pantopic:component`] = name
-			s, err := h.agent.ShardUpdate(ctx, shard.Id, zongzi.WithTags(shard.Tags))
+			component := get[*pb.Component](ctx, ctxKeyComponent)
+			componentName := fmt.Sprintf(`%s.%s.%s`, component.GetNamespace(), component.GetResource(), component.GetName())
+			shard.Tags[`pantopic:component`] = componentName
+			if bind := shard.Tags[`placement:bind`]; bind != "" {
+				shard.Tags[`placement:bind`] = componentName + "." + bind[strings.LastIndexByte(bind, '.')+1:]
+			}
+			s, err := h.agent.ShardUpdate(ctx, shard.Id,
+				zongzi.WithTags(component.Tags),
+				zongzi.WithTags(shard.Tags))
 			if err == nil {
 				res = shardToPb(s)
 			}
 			return
+		},
+		"__cluster_resource_tagged": func(ctx context.Context, tag, val string) (res bool) {
+			resource := get[*pb.Resource](ctx, ctxKeyResource)
+			return tagged(resource.GetTags(), tag, val)
 		},
 	} {
 		switch fn := fn.(type) {
@@ -153,46 +202,28 @@ func (h *hostModule) Register(ctx context.Context, r wazero.Runtime) (err error)
 					writeUint32(mod, meta.ptrBufLen, 0)
 				}
 			})
+		case func(ctx context.Context, tag, val string) (res bool):
+			register(name, func(ctx context.Context, mod api.Module, stack []uint64) {
+				meta := get[*meta](ctx, ctxKeyMeta)
+				kv := string(getBuf(mod, meta))
+				parts := strings.Split(kv, "=")
+				var tag = parts[0]
+				var val string
+				if len(parts) > 1 {
+					val = parts[1]
+				}
+				if fn(ctx, tag, val) {
+					writeUint32(mod, meta.ptrBufLen, 1)
+				} else {
+					writeUint32(mod, meta.ptrBufLen, 0)
+				}
+			})
 		default:
 			log.Panicf("Method signature implementation missing: %#v", fn)
 		}
 	}
 	h.module, err = builder.Instantiate(ctx)
 	return
-}
-
-// InitContext retrieves the meta page from the wasm module
-func (h *hostModule) InitContext(ctx context.Context, m api.Module) (context.Context, error) {
-	fn := m.ExportedFunction(`__cluster`)
-	if fn == nil {
-		return ctx, nil
-	}
-	stack, err := fn.Call(ctx)
-	if err != nil {
-		return ctx, err
-	}
-	meta := &meta{}
-	ptr := uint32(stack[0])
-	for i, v := range []*uint32{
-		&meta.ptrBufCap,
-		&meta.ptrBufLen,
-		&meta.ptrBuf,
-		&meta.ptrErrCap,
-		&meta.ptrErrLen,
-		&meta.ptrErr,
-	} {
-		*v = readUint32(m, ptr+uint32(4*i))
-	}
-	return context.WithValue(ctx, ctxKeyMeta, meta), nil
-}
-
-// ContextCopier populates dst context with the meta page from src context.
-func (h *hostModule) ContextCopy(dst, src context.Context) context.Context {
-	if v := src.Value(ctxKeyMeta); v != nil {
-		dst = context.WithValue(dst, ctxKeyMeta, v.(*meta))
-		dst = context.WithValue(dst, ctxKeyLocal, &ctxLocal{})
-	}
-	return dst
 }
 
 func (r *hostModule) Reconcile(ctx context.Context, pool wazeropool.Instance, item *pb.Component) (status uint32, err error) {

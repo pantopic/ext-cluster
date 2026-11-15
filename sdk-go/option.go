@@ -17,3 +17,11 @@ func WithBufferCap(n uint32) Option {
 		bufCap = n
 	}
 }
+
+type ShardOption func(s *pb.Shard)
+
+func WithTag(key, value string) ShardOption {
+	return func(s *pb.Shard) {
+		s.Tags[key] = value
+	}
+}

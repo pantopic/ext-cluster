@@ -41,7 +41,10 @@ func ShardIter() iter.Seq[*pb.Shard] {
 	}
 }
 
-func ShardCreate(s *pb.Shard) (*pb.Shard, error) {
+func ShardCreate(s *pb.Shard, opts ...ShardOption) (*pb.Shard, error) {
+	for _, opt := range opts {
+		opt(s)
+	}
 	n, err := s.MarshalToVT(buf)
 	if err != nil {
 		panic(err)
@@ -58,7 +61,10 @@ func ShardCreate(s *pb.Shard) (*pb.Shard, error) {
 	return shard, nil
 }
 
-func ShardUpdate(s *pb.Shard) (*pb.Shard, error) {
+func ShardUpdate(s *pb.Shard, opts ...ShardOption) (*pb.Shard, error) {
+	for _, opt := range opts {
+		opt(s)
+	}
 	n, err := s.MarshalToVT(buf)
 	if err != nil {
 		panic(err)
@@ -73,4 +79,14 @@ func ShardUpdate(s *pb.Shard) (*pb.Shard, error) {
 		panic(err)
 	}
 	return shard, nil
+}
+
+func ResourceTagged(key string, val ...string) bool {
+	str := key
+	if len(val) > 0 {
+		str += `=` + val[0]
+	}
+	setBufStr(str)
+	_resource_tagged()
+	return bufLen > 0
 }
