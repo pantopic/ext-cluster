@@ -306,7 +306,7 @@ func (x *Service) GetPort() uint64 {
 	return 0
 }
 
-type Component struct {
+type Bank struct {
 	unknownFields []byte
 	Namespace     string            `protobuf:"bytes,1,opt,name=namespace,proto3" json:"namespace,omitempty"`
 	Resource      string            `protobuf:"bytes,2,opt,name=resource,proto3" json:"resource,omitempty"`
@@ -321,83 +321,83 @@ type Component struct {
 	Status        string            `protobuf:"bytes,11,opt,name=status,proto3" json:"status,omitempty"`
 }
 
-func (x *Component) Reset() {
-	*x = Component{}
+func (x *Bank) Reset() {
+	*x = Bank{}
 }
 
-func (*Component) ProtoMessage() {}
+func (*Bank) ProtoMessage() {}
 
-func (x *Component) GetNamespace() string {
+func (x *Bank) GetNamespace() string {
 	if x != nil {
 		return x.Namespace
 	}
 	return ""
 }
 
-func (x *Component) GetResource() string {
+func (x *Bank) GetResource() string {
 	if x != nil {
 		return x.Resource
 	}
 	return ""
 }
 
-func (x *Component) GetCluster() string {
+func (x *Bank) GetCluster() string {
 	if x != nil {
 		return x.Cluster
 	}
 	return ""
 }
 
-func (x *Component) GetName() string {
+func (x *Bank) GetName() string {
 	if x != nil {
 		return x.Name
 	}
 	return ""
 }
 
-func (x *Component) GetVersion() uint64 {
+func (x *Bank) GetVersion() uint64 {
 	if x != nil {
 		return x.Version
 	}
 	return 0
 }
 
-func (x *Component) GetCreated() uint64 {
+func (x *Bank) GetCreated() uint64 {
 	if x != nil {
 		return x.Created
 	}
 	return 0
 }
 
-func (x *Component) GetUpdated() uint64 {
+func (x *Bank) GetUpdated() uint64 {
 	if x != nil {
 		return x.Updated
 	}
 	return 0
 }
 
-func (x *Component) GetDeleted() uint64 {
+func (x *Bank) GetDeleted() uint64 {
 	if x != nil {
 		return x.Deleted
 	}
 	return 0
 }
 
-func (x *Component) GetTags() map[string]string {
+func (x *Bank) GetTags() map[string]string {
 	if x != nil {
 		return x.Tags
 	}
 	return nil
 }
 
-func (x *Component) GetType() string {
+func (x *Bank) GetType() string {
 	if x != nil {
 		return x.Type
 	}
 	return ""
 }
 
-func (x *Component) GetStatus() string {
+func (x *Bank) GetStatus() string {
 	if x != nil {
 		return x.Status
 	}
@@ -565,10 +565,10 @@ type Replica struct {
 	Id            uint64            `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 	Created       uint64            `protobuf:"varint,2,opt,name=created,proto3" json:"created,omitempty"`
 	Updated       uint64            `protobuf:"varint,3,opt,name=updated,proto3" json:"updated,omitempty"`
-	HostId        string            `protobuf:"bytes,4,opt,name=host_id,json=hostId,proto3" json:"hostId,omitempty"`
-	IsNonVoting   bool              `protobuf:"varint,5,opt,name=is_non_voting,json=isNonVoting,proto3" json:"isNonVoting,omitempty"`
-	IsWitness     bool              `protobuf:"varint,6,opt,name=is_witness,json=isWitness,proto3" json:"isWitness,omitempty"`
-	ShardId       uint64            `protobuf:"varint,7,opt,name=shard_id,json=shardId,proto3" json:"shardId,omitempty"`
+	ShardId       uint64            `protobuf:"varint,4,opt,name=shard_id,json=shardId,proto3" json:"shardId,omitempty"`
+	HostId        string            `protobuf:"bytes,5,opt,name=host_id,json=hostId,proto3" json:"hostId,omitempty"`
+	IsNonVoting   bool              `protobuf:"varint,6,opt,name=is_non_voting,json=isNonVoting,proto3" json:"isNonVoting,omitempty"`
+	IsWitness     bool              `protobuf:"varint,7,opt,name=is_witness,json=isWitness,proto3" json:"isWitness,omitempty"`
 	Tags          map[string]string `protobuf:"bytes,8,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	Status        string            `protobuf:"bytes,9,opt,name=status,proto3" json:"status,omitempty"`
 }
@@ -600,6 +600,13 @@ func (x *Replica) GetUpdated() uint64 {
 	return 0
 }
 
+func (x *Replica) GetShardId() uint64 {
+	if x != nil {
+		return x.ShardId
+	}
+	return 0
+}
+
 func (x *Replica) GetHostId() string {
 	if x != nil {
 		return x.HostId
@@ -619,13 +626,6 @@ func (x *Replica) GetIsWitness() bool {
 		return x.IsWitness
 	}
 	return false
-}
-
-func (x *Replica) GetShardId() uint64 {
-	if x != nil {
-		return x.ShardId
-	}
-	return 0
 }
 
 func (x *Replica) GetTags() map[string]string {
@@ -746,26 +746,26 @@ func (x *Service_TagsEntry) GetValue() string {
 	return ""
 }
 
-type Component_TagsEntry struct {
+type Bank_TagsEntry struct {
 	unknownFields []byte
 	Key           string `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 	Value         string `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
 }
 
-func (x *Component_TagsEntry) Reset() {
-	*x = Component_TagsEntry{}
+func (x *Bank_TagsEntry) Reset() {
+	*x = Bank_TagsEntry{}
 }
 
-func (*Component_TagsEntry) ProtoMessage() {}
+func (*Bank_TagsEntry) ProtoMessage() {}
 
-func (x *Component_TagsEntry) GetKey() string {
+func (x *Bank_TagsEntry) GetKey() string {
 	if x != nil {
 		return x.Key
 	}
 	return ""
 }
 
-func (x *Component_TagsEntry) GetValue() string {
+func (x *Bank_TagsEntry) GetValue() string {
 	if x != nil {
 		return x.Value
 	}
@@ -1178,7 +1178,7 @@ func (m *Service) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *Component) MarshalVT() (dAtA []byte, err error) {
+func (m *Bank) MarshalVT() (dAtA []byte, err error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -1191,12 +1191,12 @@ func (m *Component) MarshalVT() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *Component) MarshalToVT(dAtA []byte) (int, error) {
+func (m *Bank) MarshalToVT(dAtA []byte) (int, error) {
 	size := m.SizeVT()
 	return m.MarshalToSizedBufferVT(dAtA[:size])
 }
 
-func (m *Component) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+func (m *Bank) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -1495,25 +1495,25 @@ func (m *Replica) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 			dAtA[i] = 0x42
 		}
 	}
-	if m.ShardId != 0 {
-		i = protobuf_go_lite.EncodeVarint(dAtA, i, uint64(m.ShardId))
-		i--
-		dAtA[i] = 0x38
-	}
 	if m.IsWitness {
 		i = protobuf_go_lite.EncodeBool(dAtA, i, m.IsWitness)
 		i--
-		dAtA[i] = 0x30
+		dAtA[i] = 0x38
 	}
 	if m.IsNonVoting {
 		i = protobuf_go_lite.EncodeBool(dAtA, i, m.IsNonVoting)
 		i--
-		dAtA[i] = 0x28
+		dAtA[i] = 0x30
 	}
 	if len(m.HostId) > 0 {
 		i = protobuf_go_lite.EncodeString(dAtA, i, m.HostId)
 		i--
-		dAtA[i] = 0x22
+		dAtA[i] = 0x2a
+	}
+	if m.ShardId != 0 {
+		i = protobuf_go_lite.EncodeVarint(dAtA, i, uint64(m.ShardId))
+		i--
+		dAtA[i] = 0x20
 	}
 	if m.Updated != 0 {
 		i = protobuf_go_lite.EncodeVarint(dAtA, i, uint64(m.Updated))
@@ -1625,7 +1625,7 @@ func (m *Service) SizeVT() (n int) {
 	return n
 }
 
-func (m *Component) SizeVT() (n int) {
+func (m *Bank) SizeVT() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1707,10 +1707,10 @@ func (m *Replica) SizeVT() (n int) {
 	n += protobuf_go_lite.SizeVarintNonZero(1, m.Id)
 	n += protobuf_go_lite.SizeVarintNonZero(1, m.Created)
 	n += protobuf_go_lite.SizeVarintNonZero(1, m.Updated)
+	n += protobuf_go_lite.SizeVarintNonZero(1, m.ShardId)
 	n += protobuf_go_lite.SizeStringNonEmpty(1, m.HostId)
 	n += protobuf_go_lite.SizeBoolNonZero(1, m.IsNonVoting)
 	n += protobuf_go_lite.SizeBoolNonZero(1, m.IsWitness)
-	n += protobuf_go_lite.SizeVarintNonZero(1, m.ShardId)
 	for k, v := range m.Tags {
 		_ = k
 		_ = v
@@ -2321,7 +2321,7 @@ func (m *Service) UnmarshalVT(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *Component) UnmarshalVT(dAtA []byte) error {
+func (m *Bank) UnmarshalVT(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	var err error
@@ -2335,10 +2335,10 @@ func (m *Component) UnmarshalVT(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: Component: wiretype end group for non-group")
+			return fmt.Errorf("proto: Bank: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Component: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: Bank: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2860,6 +2860,15 @@ func (m *Replica) UnmarshalVT(dAtA []byte) error {
 				return err
 			}
 		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ShardId", wireType)
+			}
+			m.ShardId = 0
+			m.ShardId, iNdEx, err = protobuf_go_lite.DecodeVarint(dAtA, iNdEx)
+			if err != nil {
+				return err
+			}
+		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field HostId", wireType)
 			}
@@ -2869,7 +2878,7 @@ func (m *Replica) UnmarshalVT(dAtA []byte) error {
 				return err
 			}
 			m.HostId = v
-		case 5:
+		case 6:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field IsNonVoting", wireType)
 			}
@@ -2879,7 +2888,7 @@ func (m *Replica) UnmarshalVT(dAtA []byte) error {
 				return err
 			}
 			m.IsNonVoting = bool(v)
-		case 6:
+		case 7:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field IsWitness", wireType)
 			}
@@ -2889,15 +2898,6 @@ func (m *Replica) UnmarshalVT(dAtA []byte) error {
 				return err
 			}
 			m.IsWitness = bool(v)
-		case 7:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ShardId", wireType)
-			}
-			m.ShardId = 0
-			m.ShardId, iNdEx, err = protobuf_go_lite.DecodeVarint(dAtA, iNdEx)
-			if err != nil {
-				return err
-			}
 		case 8:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Tags", wireType)

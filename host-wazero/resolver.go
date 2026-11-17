@@ -14,8 +14,8 @@ var (
 	ctxKeyNamespaceName = Name + `/namespace-name`
 	ctxKeyResource      = Name + `/resource`
 	ctxKeyResourceName  = Name + `/resource-name`
-	ctxKeyComponent     = Name + "/component"
-	ctxKeyComponentName = Name + "/component-name"
+	ctxKeyBank          = Name + "/bank"
+	ctxKeyBankName      = Name + "/bank-name"
 )
 
 type ContextCopy = func(dst, src context.Context) context.Context
@@ -52,6 +52,6 @@ func ContextSetResource(ctx context.Context, resource *pb.Resource) context.Cont
 	return context.WithValue(ctx, ctxKeyResource, resource)
 }
 
-func ContextSetComponent(ctx context.Context, component *pb.Component) context.Context {
-	return context.WithValue(ctx, ctxKeyComponent, component)
+func ContextSetBank(ctx context.Context, bank *pb.Bank) context.Context {
+	return context.WithValue(ctx, ctxKeyBank, bank)
 }

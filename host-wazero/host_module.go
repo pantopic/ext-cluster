@@ -91,8 +91,8 @@ func (h *hostModule) ContextCopy(dst, src context.Context) context.Context {
 		if v := src.Value(ctxKeyResource); v != nil {
 			dst = context.WithValue(dst, ctxKeyResource, v.(*pb.Resource))
 		}
-		if v := src.Value(ctxKeyComponent); v != nil {
-			dst = context.WithValue(dst, ctxKeyComponent, v.(*pb.Component))
+		if v := src.Value(ctxKeyBank); v != nil {
+			dst = context.WithValue(dst, ctxKeyBank, v.(*pb.Bank))
 		}
 	}
 	return dst
@@ -106,7 +106,7 @@ func (h *hostModule) Register(ctx context.Context, r wazero.Runtime) (err error)
 	}
 	for name, fn := range map[string]any{
 		"__cluster_shard_iter": func(ctx context.Context, shard *pb.Shard) (res *pb.Shard, err error) {
-			c := get[*pb.Component](ctx, ctxKeyComponent)
+			c := get[*pb.Bank](ctx, ctxKeyBank)
 			name := fmt.Sprintf(`%s.%s.%s`, c.GetNamespace(), c.GetResource(), c.GetName())
 			next := make(chan *pb.Shard)
 			get[*ctxLocal](ctx, ctxKeyLocal).nextShard = next
@@ -115,7 +115,7 @@ func (h *hostModule) Register(ctx context.Context, r wazero.Runtime) (err error)
 				t := time.NewTicker(5 * time.Second)
 				defer t.Stop()
 				err = h.agent.State(ctx, func(state *zongzi.State) {
-					state.ShardIterateByTag(`pantopic:component`, name, func(s zongzi.Shard) bool {
+					state.ShardIterateByTag(`pantopic:bank`, name, func(s zongzi.Shard) bool {
 						t.Reset(5 * time.Second)
 						s.Name = s.Name[strings.LastIndex(s.Name, ".")+1:]
 						select {
@@ -139,32 +139,14 @@ func (h *hostModule) Register(ctx context.Context, r wazero.Runtime) (err error)
 			return
 		},
 		"__cluster_shard_create": func(ctx context.Context, shard *pb.Shard) (res *pb.Shard, err error) {
-			component := get[*pb.Component](ctx, ctxKeyComponent)
-			componentName := fmt.Sprintf(`%s.%s.%s`, component.GetNamespace(), component.GetResource(), component.GetName())
-			shard.Tags[`pantopic:component`] = componentName
+			bank := get[*pb.Bank](ctx, ctxKeyBank)
+			bankName := fmt.Sprintf(`%s.%s.%s`, bank.GetNamespace(), bank.GetResource(), bank.GetName())
+			shard.Tags[`pantopic:bank`] = bankName
 			if bind := shard.Tags[`placement:bind`]; bind != "" {
-				shard.Tags[`placement:bind`] = componentName + "." + bind[strings.LastIndexByte(bind, '.')+1:]
+				shard.Tags[`placement:bind`] = bankName + "." + bind[strings.LastIndexByte(bind, '.')+1:]
 			}
-			s, _, err := h.agent.ShardCreate(ctx, "pantopic/ext-raft",
-				zongzi.WithName(componentName+"."+shard.Name),
-				zongzi.WithTags(component.Tags),
-				zongzi.WithTags(shard.Tags))
-			if err == nil {
-				res = shardToPb(s)
-			}
-			h.log.Infof("Shard created: %#v\n", s)
-			return
-		},
-		"__cluster_shard_create_persistent": func(ctx context.Context, shard *pb.Shard) (res *pb.Shard, err error) {
-			component := get[*pb.Component](ctx, ctxKeyComponent)
-			componentName := fmt.Sprintf(`%s.%s.%s`, component.GetNamespace(), component.GetResource(), component.GetName())
-			shard.Tags[`pantopic:component`] = componentName
-			if bind := shard.Tags[`placement:bind`]; bind != "" {
-				shard.Tags[`placement:bind`] = componentName + "." + bind[strings.LastIndexByte(bind, '.')+1:]
-			}
-			s, _, err := h.agent.ShardCreate(ctx, "pantopic/ext-raft/persistent",
-				zongzi.WithName(componentName+"."+shard.Name),
-				zongzi.WithTags(component.Tags),
+			s, _, err := h.agent.ShardCreate(ctx, shard.Type,
+				zongzi.WithName(bankName+"."+shard.Name),
 				zongzi.WithTags(shard.Tags))
 			if err == nil {
 				res = shardToPb(s)
@@ -173,14 +155,14 @@ func (h *hostModule) Register(ctx context.Context, r wazero.Runtime) (err error)
 			return
 		},
 		"__cluster_shard_update": func(ctx context.Context, shard *pb.Shard) (res *pb.Shard, err error) {
-			component := get[*pb.Component](ctx, ctxKeyComponent)
-			componentName := fmt.Sprintf(`%s.%s.%s`, component.GetNamespace(), component.GetResource(), component.GetName())
-			shard.Tags[`pantopic:component`] = componentName
+			bank := get[*pb.Bank](ctx, ctxKeyBank)
+			bankName := fmt.Sprintf(`%s.%s.%s`, bank.GetNamespace(), bank.GetResource(), bank.GetName())
+			shard.Tags[`pantopic:bank`] = bankName
 			if bind := shard.Tags[`placement:bind`]; bind != "" {
-				shard.Tags[`placement:bind`] = componentName + "." + bind[strings.LastIndexByte(bind, '.')+1:]
+				shard.Tags[`placement:bind`] = bankName + "." + bind[strings.LastIndexByte(bind, '.')+1:]
 			}
 			s, err := h.agent.ShardUpdate(ctx, shard.Id,
-				zongzi.WithTags(component.Tags),
+				zongzi.WithTags(bank.Tags),
 				zongzi.WithTags(shard.Tags))
 			if err == nil {
 				res = shardToPb(s)
@@ -190,6 +172,10 @@ func (h *hostModule) Register(ctx context.Context, r wazero.Runtime) (err error)
 		"__cluster_resource_tagged": func(ctx context.Context, tag, val string) (res bool) {
 			resource := get[*pb.Resource](ctx, ctxKeyResource)
 			return tagged(resource.GetTags(), tag, val)
+		},
+		"__cluster_bank_tagged": func(ctx context.Context, tag, val string) (res bool) {
+			bank := get[*pb.Bank](ctx, ctxKeyBank)
+			return tagged(bank.GetTags(), tag, val)
 		},
 	} {
 		switch fn := fn.(type) {
@@ -254,18 +240,18 @@ func (r *hostModule) Reconcile(
 	ctx context.Context,
 	pool wazeropool.Instance,
 	resource *pb.Resource,
-	component *pb.Component,
+	bank *pb.Bank,
 ) (status uint32, err error) {
 	ctx = context.WithValue(ctx, ctxKeyResource, resource)
-	ctx = context.WithValue(ctx, ctxKeyComponent, component)
+	ctx = context.WithValue(ctx, ctxKeyBank, bank)
 	pool.Run(func(mod api.Module) {
 		fn := mod.ExportedFunction("__cluster_reconcile")
 		if fn == nil {
-			err = fmt.Errorf("no reconcile function found for component %s", component.Type)
+			err = fmt.Errorf("no reconcile function found for bank %s", bank.Type)
 			return
 		}
 		meta := get[*meta](ctx, ctxKeyMeta)
-		n, err := component.MarshalToVT(buf(mod, meta))
+		n, err := bank.MarshalToVT(buf(mod, meta))
 		if err != nil {
 			log.Fatal(err)
 		}
