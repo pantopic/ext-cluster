@@ -15,7 +15,6 @@ func Init(opts ...Option) {
 	for _, opt := range opts {
 		opt()
 	}
-	buf = make([]byte, int(bufCap))
 }
 
 func Shard() *pb.Shard {
@@ -61,6 +60,26 @@ func ShardCreate(s *pb.Shard, opts ...ShardOption) (*pb.Shard, error) {
 	return shard, nil
 }
 
+func ShardCreatePersistent(s *pb.Shard, opts ...ShardOption) (*pb.Shard, error) {
+	for _, opt := range opts {
+		opt(s)
+	}
+	n, err := s.MarshalToVT(buf)
+	if err != nil {
+		panic(err)
+	}
+	bufLen = uint32(n)
+	_shard_create_persistent()
+	if bufLen == 0 {
+		return nil, getErr()
+	}
+	shard.Reset()
+	if err := shard.UnmarshalVT(buf[:bufLen]); err != nil {
+		panic(err)
+	}
+	return shard, nil
+}
+
 func ShardUpdate(s *pb.Shard, opts ...ShardOption) (*pb.Shard, error) {
 	for _, opt := range opts {
 		opt(s)
@@ -86,7 +105,7 @@ func ResourceTagged(key string, val ...string) bool {
 	if len(val) > 0 {
 		str += `=` + val[0]
 	}
-	setBufStr(str)
+	setBuf([]byte(str))
 	_resource_tagged()
 	return bufLen > 0
 }

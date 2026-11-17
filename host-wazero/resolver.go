@@ -51,3 +51,7 @@ func ResolveFrom(ctx context.Context) (string, string) {
 func ContextSetResource(ctx context.Context, resource *pb.Resource) context.Context {
 	return context.WithValue(ctx, ctxKeyResource, resource)
 }
+
+func ContextSetComponent(ctx context.Context, component *pb.Component) context.Context {
+	return context.WithValue(ctx, ctxKeyComponent, component)
+}

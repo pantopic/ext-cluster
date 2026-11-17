@@ -12,16 +12,13 @@ func WithComponentReconciler(fn func(*pb.Component) uint32) Option {
 	}
 }
 
-func WithBufferCap(n uint32) Option {
-	return func() {
-		bufCap = n
-	}
-}
-
 type ShardOption func(s *pb.Shard)
 
 func WithTag(key, value string) ShardOption {
 	return func(s *pb.Shard) {
+		if s.Tags == nil {
+			s.Tags = make(map[string]string)
+		}
 		s.Tags[key] = value
 	}
 }

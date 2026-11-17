@@ -39,13 +39,14 @@ type meta struct {
 type hostModule struct {
 	sync.RWMutex
 
-	module api.Module
-	agent  *zongzi.Agent
+	agent *zongzi.Agent
+	log   zongzi.Logger
 }
 
 func New(agent *zongzi.Agent, opts ...Option) *hostModule {
 	h := &hostModule{
 		agent: agent,
+		log:   zongzi.GetLogger(`ext-cluster`),
 	}
 	for _, opt := range opts {
 		opt(h)
@@ -87,6 +88,12 @@ func (h *hostModule) ContextCopy(dst, src context.Context) context.Context {
 	if v := src.Value(ctxKeyMeta); v != nil {
 		dst = context.WithValue(dst, ctxKeyMeta, v.(*meta))
 		dst = context.WithValue(dst, ctxKeyLocal, &ctxLocal{})
+		if v := src.Value(ctxKeyResource); v != nil {
+			dst = context.WithValue(dst, ctxKeyResource, v.(*pb.Resource))
+		}
+		if v := src.Value(ctxKeyComponent); v != nil {
+			dst = context.WithValue(dst, ctxKeyComponent, v.(*pb.Component))
+		}
 	}
 	return dst
 }
@@ -145,7 +152,24 @@ func (h *hostModule) Register(ctx context.Context, r wazero.Runtime) (err error)
 			if err == nil {
 				res = shardToPb(s)
 			}
-			fmt.Printf("Created shard: %#v\n", s)
+			h.log.Infof("Shard created: %#v\n", s)
+			return
+		},
+		"__cluster_shard_create_persistent": func(ctx context.Context, shard *pb.Shard) (res *pb.Shard, err error) {
+			component := get[*pb.Component](ctx, ctxKeyComponent)
+			componentName := fmt.Sprintf(`%s.%s.%s`, component.GetNamespace(), component.GetResource(), component.GetName())
+			shard.Tags[`pantopic:component`] = componentName
+			if bind := shard.Tags[`placement:bind`]; bind != "" {
+				shard.Tags[`placement:bind`] = componentName + "." + bind[strings.LastIndexByte(bind, '.')+1:]
+			}
+			s, _, err := h.agent.ShardCreate(ctx, "pantopic/ext-raft/persistent",
+				zongzi.WithName(componentName+"."+shard.Name),
+				zongzi.WithTags(component.Tags),
+				zongzi.WithTags(shard.Tags))
+			if err == nil {
+				res = shardToPb(s)
+			}
+			h.log.Infof("Shard created: %#v\n", s)
 			return
 		},
 		"__cluster_shard_update": func(ctx context.Context, shard *pb.Shard) (res *pb.Shard, err error) {
@@ -205,7 +229,7 @@ func (h *hostModule) Register(ctx context.Context, r wazero.Runtime) (err error)
 		case func(ctx context.Context, tag, val string) (res bool):
 			register(name, func(ctx context.Context, mod api.Module, stack []uint64) {
 				meta := get[*meta](ctx, ctxKeyMeta)
-				kv := string(getBuf(mod, meta))
+				kv := string(getBufCopy(mod, meta))
 				parts := strings.Split(kv, "=")
 				var tag = parts[0]
 				var val string
@@ -222,20 +246,26 @@ func (h *hostModule) Register(ctx context.Context, r wazero.Runtime) (err error)
 			log.Panicf("Method signature implementation missing: %#v", fn)
 		}
 	}
-	h.module, err = builder.Instantiate(ctx)
+	_, err = builder.Instantiate(ctx)
 	return
 }
 
-func (r *hostModule) Reconcile(ctx context.Context, pool wazeropool.Instance, item *pb.Component) (status uint32, err error) {
-	ctx = context.WithValue(ctx, ctxKeyComponent, item)
+func (r *hostModule) Reconcile(
+	ctx context.Context,
+	pool wazeropool.Instance,
+	resource *pb.Resource,
+	component *pb.Component,
+) (status uint32, err error) {
+	ctx = context.WithValue(ctx, ctxKeyResource, resource)
+	ctx = context.WithValue(ctx, ctxKeyComponent, component)
 	pool.Run(func(mod api.Module) {
 		fn := mod.ExportedFunction("__cluster_reconcile")
 		if fn == nil {
-			err = fmt.Errorf("no reconcile function found for component %s", item.Type)
+			err = fmt.Errorf("no reconcile function found for component %s", component.Type)
 			return
 		}
 		meta := get[*meta](ctx, ctxKeyMeta)
-		n, err := item.MarshalToVT(buf(mod, meta))
+		n, err := component.MarshalToVT(buf(mod, meta))
 		if err != nil {
 			log.Fatal(err)
 		}

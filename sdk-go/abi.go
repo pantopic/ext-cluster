@@ -7,13 +7,14 @@ import (
 )
 
 var (
-	bufCap uint32 = 10 << 10 // 10 KiB
+	bufCap uint32 = 4 << 10 // 4 KiB
 	bufLen uint32
-	buf    []byte
 	errCap uint32 = 1 << 10 // 1 KiB
 	errLen uint32
-	err    = make([]byte, int(errCap))
-	meta   = make([]uint32, 6)
+
+	buf  = make([]byte, int(bufCap))
+	err  = make([]byte, int(errCap))
+	meta = make([]uint32, 6)
 
 	component = new(pb.Component)
 )
@@ -46,8 +47,8 @@ func getErr() (e error) {
 	return
 }
 
-func setBufStr(data string) {
-	copy(buf[:0], data)
+func setBuf(data []byte) {
+	copy(buf[:bufCap], data)
 	bufLen = uint32(len(data))
 }
 
@@ -64,6 +65,10 @@ func _shard_iter()
 func _shard_create()
 
 //go:wasm-module pantopic/ext-cluster
+//export __cluster_shard_create_persistent
+func _shard_create_persistent()
+
+//go:wasm-module pantopic/ext-cluster
 //export __cluster_shard_update
 func _shard_update()
 
@@ -77,5 +82,6 @@ var _ = _reconcile
 var _ = _shard_next
 var _ = _shard_iter
 var _ = _shard_create
+var _ = _shard_create_persistent
 var _ = _shard_update
 var _ = _resource_tagged
