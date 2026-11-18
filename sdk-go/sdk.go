@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	reconcile func(*pb.Bank) uint32
+	reconcile func(*pb.Component) uint32
 	shard     = new(pb.Shard)
 )
 
@@ -96,12 +96,12 @@ func ResourceTagged(key string, val ...string) bool {
 	return bufLen > 0
 }
 
-func BankTagged(key string, val ...string) bool {
+func ComponentTagged(key string, val ...string) bool {
 	str := key
 	if len(val) > 0 {
 		str += `=` + val[0]
 	}
 	setBuf([]byte(str))
-	_bank_tagged()
+	_component_tagged()
 	return bufLen > 0
 }

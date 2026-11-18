@@ -8,7 +8,7 @@ import (
 
 type Option func()
 
-func WithBankReconciler(fn func(*pb.Bank) uint32) Option {
+func WithComponentReconciler(fn func(*pb.Component) uint32) Option {
 	return func() {
 		reconcile = fn
 	}

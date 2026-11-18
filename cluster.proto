@@ -48,7 +48,7 @@ message Service {
   uint64 port = 11;
 }
 
-message Bank {
+message Component {
   string namespace = 1;
   string resource = 2;
   string cluster = 3;

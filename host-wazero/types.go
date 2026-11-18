@@ -14,5 +14,5 @@ const (
 )
 
 type Reconciler interface {
-	Reconcile(ctx context.Context, pool wazeropool.Instance, resource *pb.Resource, bank *pb.Bank) (status uint32, err error)
+	Reconcile(ctx context.Context, pool wazeropool.Instance, resource *pb.Resource, component *pb.Component) (status uint32, err error)
 }

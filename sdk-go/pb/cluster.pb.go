@@ -306,7 +306,7 @@ func (x *Service) GetPort() uint64 {
 	return 0
 }
 
-type Bank struct {
+type Component struct {
 	unknownFields []byte
 	Namespace     string            `protobuf:"bytes,1,opt,name=namespace,proto3" json:"namespace,omitempty"`
 	Resource      string            `protobuf:"bytes,2,opt,name=resource,proto3" json:"resource,omitempty"`
@@ -321,83 +321,83 @@ type Bank struct {
 	Status        string            `protobuf:"bytes,11,opt,name=status,proto3" json:"status,omitempty"`
 }
 
-func (x *Bank) Reset() {
-	*x = Bank{}
+func (x *Component) Reset() {
+	*x = Component{}
 }
 
-func (*Bank) ProtoMessage() {}
+func (*Component) ProtoMessage() {}
 
-func (x *Bank) GetNamespace() string {
+func (x *Component) GetNamespace() string {
 	if x != nil {
 		return x.Namespace
 	}
 	return ""
 }
 
-func (x *Bank) GetResource() string {
+func (x *Component) GetResource() string {
 	if x != nil {
 		return x.Resource
 	}
 	return ""
 }
 
-func (x *Bank) GetCluster() string {
+func (x *Component) GetCluster() string {
 	if x != nil {
 		return x.Cluster
 	}
 	return ""
 }
 
-func (x *Bank) GetName() string {
+func (x *Component) GetName() string {
 	if x != nil {
 		return x.Name
 	}
 	return ""
 }
 
-func (x *Bank) GetVersion() uint64 {
+func (x *Component) GetVersion() uint64 {
 	if x != nil {
 		return x.Version
 	}
 	return 0
 }
 
-func (x *Bank) GetCreated() uint64 {
+func (x *Component) GetCreated() uint64 {
 	if x != nil {
 		return x.Created
 	}
 	return 0
 }
 
-func (x *Bank) GetUpdated() uint64 {
+func (x *Component) GetUpdated() uint64 {
 	if x != nil {
 		return x.Updated
 	}
 	return 0
 }
 
-func (x *Bank) GetDeleted() uint64 {
+func (x *Component) GetDeleted() uint64 {
 	if x != nil {
 		return x.Deleted
 	}
 	return 0
 }
 
-func (x *Bank) GetTags() map[string]string {
+func (x *Component) GetTags() map[string]string {
 	if x != nil {
 		return x.Tags
 	}
 	return nil
 }
 
-func (x *Bank) GetType() string {
+func (x *Component) GetType() string {
 	if x != nil {
 		return x.Type
 	}
 	return ""
 }
 
-func (x *Bank) GetStatus() string {
+func (x *Component) GetStatus() string {
 	if x != nil {
 		return x.Status
 	}
@@ -746,26 +746,26 @@ func (x *Service_TagsEntry) GetValue() string {
 	return ""
 }
 
-type Bank_TagsEntry struct {
+type Component_TagsEntry struct {
 	unknownFields []byte
 	Key           string `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 	Value         string `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
 }
 
-func (x *Bank_TagsEntry) Reset() {
-	*x = Bank_TagsEntry{}
+func (x *Component_TagsEntry) Reset() {
+	*x = Component_TagsEntry{}
 }
 
-func (*Bank_TagsEntry) ProtoMessage() {}
+func (*Component_TagsEntry) ProtoMessage() {}
 
-func (x *Bank_TagsEntry) GetKey() string {
+func (x *Component_TagsEntry) GetKey() string {
 	if x != nil {
 		return x.Key
 	}
 	return ""
 }
 
-func (x *Bank_TagsEntry) GetValue() string {
+func (x *Component_TagsEntry) GetValue() string {
 	if x != nil {
 		return x.Value
 	}
@@ -1178,7 +1178,7 @@ func (m *Service) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *Bank) MarshalVT() (dAtA []byte, err error) {
+func (m *Component) MarshalVT() (dAtA []byte, err error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -1191,12 +1191,12 @@ func (m *Bank) MarshalVT() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *Bank) MarshalToVT(dAtA []byte) (int, error) {
+func (m *Component) MarshalToVT(dAtA []byte) (int, error) {
 	size := m.SizeVT()
 	return m.MarshalToSizedBufferVT(dAtA[:size])
 }
 
-func (m *Bank) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+func (m *Component) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -1625,7 +1625,7 @@ func (m *Service) SizeVT() (n int) {
 	return n
 }
 
-func (m *Bank) SizeVT() (n int) {
+func (m *Component) SizeVT() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2321,7 +2321,7 @@ func (m *Service) UnmarshalVT(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *Bank) UnmarshalVT(dAtA []byte) error {
+func (m *Component) UnmarshalVT(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	var err error
@@ -2335,10 +2335,10 @@ func (m *Bank) UnmarshalVT(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: Bank: wiretype end group for non-group")
+			return fmt.Errorf("proto: Component: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Bank: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: Component: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:

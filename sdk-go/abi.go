@@ -16,7 +16,7 @@ var (
 	err  = make([]byte, int(errCap))
 	meta = make([]uint32, 6)
 
-	bank = new(pb.Bank)
+	component = new(pb.Component)
 )
 
 //export __cluster
@@ -36,8 +36,8 @@ func __cluster() (res uint32) {
 
 //export __cluster_reconcile
 func _reconcile() uint32 {
-	bank.UnmarshalVT(buf[:bufLen])
-	return reconcile(bank)
+	component.UnmarshalVT(buf[:bufLen])
+	return reconcile(component)
 }
 
 func getErr() (e error) {
@@ -73,8 +73,8 @@ func _shard_update()
 func _resource_tagged()
 
 //go:wasm-module pantopic/ext-cluster
-//export __cluster_bank_tagged
-func _bank_tagged()
+//export __cluster_component_tagged
+func _component_tagged()
 
 // Fix for lint rule `unusedfunc`
 var _ = __cluster
@@ -84,4 +84,4 @@ var _ = _shard_iter
 var _ = _shard_create
 var _ = _shard_update
 var _ = _resource_tagged
-var _ = _bank_tagged
+var _ = _component_tagged
