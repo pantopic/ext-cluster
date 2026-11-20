@@ -151,7 +151,6 @@ func (h *hostModule) Register(ctx context.Context, r wazero.Runtime) (err error)
 			if err == nil {
 				res = shardToPb(s)
 			}
-			h.log.Infof("Shard created: %#v\n", s)
 			return
 		},
 		"__cluster_shard_update": func(ctx context.Context, shard *pb.Shard) (res *pb.Shard, err error) {
